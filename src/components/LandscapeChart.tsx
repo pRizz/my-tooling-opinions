@@ -169,7 +169,7 @@ export function LandscapeChart(props: LandscapeChartProps) {
                     x={center.x}
                     y={topLabelY + 14}
                     text-anchor="middle"
-                    fill={withAlpha(props.palette.subtext, 0.75)}
+                    fill={withAlpha(props.palette.subtext, 0.88)}
                     style={{ 'font-size': '9.5px', 'font-style': 'italic' }}
                   >
                     (default layer)
