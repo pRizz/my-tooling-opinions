@@ -409,6 +409,12 @@
   font-size: 1rem;
 }
 
+.detail-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .detail-link {
   display: inline-flex;
   align-items: center;

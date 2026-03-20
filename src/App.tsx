@@ -68,7 +68,7 @@ function App() {
       <div class="background-orb background-orb-right" aria-hidden="true" />
 
       <section class="hero-card">
-        <p class="eyebrow">Opinionated static atlas</p>
+        <p class="eyebrow">Peter&apos;s opinionated static atlas</p>
         <div class="hero-copy">
           <div>
             <h1>AI Tooling Landscape</h1>

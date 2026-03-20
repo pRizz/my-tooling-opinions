@@ -67,9 +67,9 @@ function buildBlobPoints(
 ): Point[] {
   const points: Point[] = []
   const count = 80
-  const primaryAmplitude = 0.024
-  const secondaryAmplitude = 0.015
-  const tertiaryAmplitude = 0.009
+  const primaryAmplitude = 0.028
+  const secondaryAmplitude = 0.018
+  const tertiaryAmplitude = 0.011
   const primarySpeed = 0.34
   const secondarySpeed = 0.48
   const tertiarySpeed = 0.2

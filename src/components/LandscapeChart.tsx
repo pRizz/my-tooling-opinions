@@ -27,12 +27,31 @@ interface LandscapeChartProps {
   onSelectionChange: (nodeId: string) => void
 }
 
+function getPrimaryLink(node: LandscapeNode) {
+  return node.links?.[0]
+}
+
+function getLinkCount(node: LandscapeNode) {
+  return node.links?.length ?? 0
+}
+
+function getChartLinkText(node: LandscapeNode) {
+  const primaryLink = getPrimaryLink(node)
+  if (!primaryLink) {
+    return null
+  }
+
+  const extraLinks = getLinkCount(node) - 1
+  return extraLinks > 0 ? `${primaryLink.shortLabel} +${extraLinks} more` : primaryLink.shortLabel
+}
+
 function openNodeLink(node: LandscapeNode) {
-  if (!node.link) {
+  const primaryLink = getPrimaryLink(node)
+  if (!primaryLink) {
     return
   }
 
-  window.open(node.link.href, '_blank', 'noopener,noreferrer')
+  window.open(primaryLink.href, '_blank', 'noopener,noreferrer')
 }
 
 export function LandscapeChart(props: LandscapeChartProps) {
@@ -161,16 +180,16 @@ export function LandscapeChart(props: LandscapeChartProps) {
                     y={topLabelY}
                     text-anchor="middle"
                     fill={props.palette.subtext}
-                    style={{ 'font-size': '11px', 'font-weight': '600' }}
+                    style={{ 'font-size': '12px', 'font-weight': '600' }}
                   >
                     {item.node.name}
                   </text>
                   <text
                     x={center.x}
-                    y={topLabelY + 14}
+                    y={topLabelY + 15}
                     text-anchor="middle"
                     fill={withAlpha(props.palette.subtext, 0.88)}
-                    style={{ 'font-size': '9.5px', 'font-style': 'italic' }}
+                    style={{ 'font-size': '10.5px', 'font-style': 'italic' }}
                   >
                     (default layer)
                   </text>
@@ -182,6 +201,7 @@ export function LandscapeChart(props: LandscapeChartProps) {
           <For each={renderedForegroundNodes()}>
             {(item) => {
               const lines = wrapLabel(item.node.name, item.node.name.length > 22 ? 16 : 20)
+              const maybeChartLinkText = getChartLinkText(item.node)
 
               return (
                 <>
@@ -194,32 +214,32 @@ export function LandscapeChart(props: LandscapeChartProps) {
 
                   <text
                     x={item.center.x}
-                    y={item.center.y - (lines.length - 1) * 9}
+                    y={item.center.y - (lines.length - 1) * 10}
                     text-anchor="middle"
                     fill={props.palette.text}
                     style={{
-                      'font-size': item.isActive ? '13.5px' : '12.5px',
+                      'font-size': item.isActive ? '14.5px' : '13.5px',
                       'font-weight': item.isActive ? '700' : '500',
                     }}
                   >
                     <For each={lines}>
                       {(line, lineIndex) => (
-                        <tspan x={item.center.x} dy={lineIndex() === 0 ? 0 : 18}>
+                        <tspan x={item.center.x} dy={lineIndex() === 0 ? 0 : 19}>
                           {line}
                         </tspan>
                       )}
                     </For>
                   </text>
 
-                  <Show when={item.isActive && item.node.link}>
+                  <Show when={item.isActive && maybeChartLinkText}>
                     <text
                       x={item.center.x}
-                      y={item.center.y + lines.length * 10 + 10}
+                      y={item.center.y + lines.length * 11 + 10}
                       text-anchor="middle"
                       fill={props.palette.subtext}
-                      style={{ 'font-size': '10px' }}
+                      style={{ 'font-size': '11px' }}
                     >
-                      github.com/gsd-build
+                      {maybeChartLinkText}
                     </text>
                   </Show>
                 </>
@@ -248,7 +268,7 @@ export function LandscapeChart(props: LandscapeChartProps) {
             y={chartBounds.bottom + 28}
             text-anchor="middle"
             fill={props.palette.axis}
-            style={{ 'font-size': '13px', 'font-weight': '600' }}
+            style={{ 'font-size': '14px', 'font-weight': '600' }}
           >
             Simple
           </text>
@@ -257,7 +277,7 @@ export function LandscapeChart(props: LandscapeChartProps) {
             y={chartBounds.bottom + 28}
             text-anchor="middle"
             fill={props.palette.axis}
-            style={{ 'font-size': '13px', 'font-weight': '600' }}
+            style={{ 'font-size': '14px', 'font-weight': '600' }}
           >
             Complex
           </text>
@@ -266,7 +286,7 @@ export function LandscapeChart(props: LandscapeChartProps) {
             y={chartBounds.bottom + 50}
             text-anchor="middle"
             fill={props.palette.subtext}
-            style={{ 'font-size': '12px', 'font-style': 'italic' }}
+            style={{ 'font-size': '13px', 'font-style': 'italic' }}
           >
             App Complexity -
           </text>
@@ -277,7 +297,7 @@ export function LandscapeChart(props: LandscapeChartProps) {
             transform={`rotate(-90 ${chartBounds.left - 30} ${chartBounds.bottom - 50})`}
             text-anchor="middle"
             fill={props.palette.axis}
-            style={{ 'font-size': '13px', 'font-weight': '600' }}
+            style={{ 'font-size': '14px', 'font-weight': '600' }}
           >
             Vibe Coded
           </text>
@@ -287,7 +307,7 @@ export function LandscapeChart(props: LandscapeChartProps) {
             transform={`rotate(-90 ${chartBounds.left - 30} ${chartBounds.top + 60})`}
             text-anchor="middle"
             fill={props.palette.axis}
-            style={{ 'font-size': '13px', 'font-weight': '600' }}
+            style={{ 'font-size': '14px', 'font-weight': '600' }}
           >
             Vibe Engineered
           </text>
@@ -297,7 +317,7 @@ export function LandscapeChart(props: LandscapeChartProps) {
             transform={`rotate(-90 ${chartBounds.left - 70} ${(chartBounds.top + chartBounds.bottom) / 2})`}
             text-anchor="middle"
             fill={props.palette.subtext}
-            style={{ 'font-size': '12px', 'font-style': 'italic' }}
+            style={{ 'font-size': '13px', 'font-style': 'italic' }}
           >
             App Durability -
           </text>
@@ -307,15 +327,23 @@ export function LandscapeChart(props: LandscapeChartProps) {
           <For each={allNodes}>
             {(node) => {
               const isActive = () => activeNodeId() === node.id
+              const linkCount = getLinkCount(node)
+              const hasLinks = linkCount > 0
+              const linkAriaSuffix =
+                linkCount === 0
+                  ? ''
+                  : linkCount === 1
+                    ? ' Opens an external link.'
+                    : ' Opens the primary external link.'
 
               return (
                 <Tooltip.Root openDelay={90} closeDelay={80}>
                   <Tooltip.Trigger
                     class="chart-hotspot"
                     data-active={isActive()}
-                    data-has-link={Boolean(node.link)}
+                    data-has-link={hasLinks}
                     style={getHotspotStyle(node)}
-                    aria-label={`${node.name}. ${node.description}${node.link ? ' Opens an external link.' : ''}`}
+                    aria-label={`${node.name}. ${node.description}${linkAriaSuffix}`}
                     onPointerEnter={() => props.onHoverChange(node.id)}
                     onPointerLeave={() => props.onHoverChange(null)}
                     onFocus={() => props.onSelectionChange(node.id)}

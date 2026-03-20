@@ -32,6 +32,7 @@ export interface PaletteTheme {
 export interface LandscapeNodeLink {
   href: string
   label: string
+  shortLabel: string
 }
 
 export interface LandscapeNode {
@@ -44,7 +45,7 @@ export interface LandscapeNode {
   rx: number
   ry: number
   rot: number
-  link?: LandscapeNodeLink
+  links?: readonly LandscapeNodeLink[]
 }
 
 export interface ChartSelectionState {
@@ -222,6 +223,13 @@ export const backgroundNodes: readonly LandscapeNode[] = [
     rx: 0.18,
     ry: 0.47,
     rot: 0.04,
+    links: [
+      {
+        href: 'https://developers.openai.com/codex/app',
+        label: 'Open the Codex app',
+        shortLabel: 'developers.openai.com',
+      },
+    ],
   },
   {
     id: 'codex-desktop-plan-mode',
@@ -234,6 +242,13 @@ export const backgroundNodes: readonly LandscapeNode[] = [
     rx: 0.4,
     ry: 0.47,
     rot: -0.02,
+    links: [
+      {
+        href: 'https://developers.openai.com/codex/app',
+        label: 'Open the Codex app',
+        shortLabel: 'developers.openai.com',
+      },
+    ],
   },
 ]
 
@@ -248,6 +263,18 @@ export const foregroundNodes: readonly LandscapeNode[] = [
     rx: 0.15,
     ry: 0.17,
     rot: -0.1,
+    links: [
+      {
+        href: 'https://cursor.com/',
+        label: 'Open Cursor',
+        shortLabel: 'cursor.com',
+      },
+      {
+        href: 'https://developers.openai.com/codex/app',
+        label: 'Open the Codex app',
+        shortLabel: 'developers.openai.com',
+      },
+    ],
   },
   {
     id: 'lovable-plan-mode',
@@ -260,6 +287,13 @@ export const foregroundNodes: readonly LandscapeNode[] = [
     rx: 0.18,
     ry: 0.12,
     rot: 0.1,
+    links: [
+      {
+        href: 'https://docs.lovable.dev/introduction/welcome',
+        label: 'Open Lovable docs',
+        shortLabel: 'docs.lovable.dev',
+      },
+    ],
   },
   {
     id: 'cursor-cloud-agents',
@@ -272,6 +306,13 @@ export const foregroundNodes: readonly LandscapeNode[] = [
     rx: 0.15,
     ry: 0.35,
     rot: 0.06,
+    links: [
+      {
+        href: 'https://docs.cursor.com/background-agents',
+        label: 'Open Cursor background agents',
+        shortLabel: 'docs.cursor.com',
+      },
+    ],
   },
   {
     id: 'gsd',
@@ -284,10 +325,13 @@ export const foregroundNodes: readonly LandscapeNode[] = [
     rx: 0.16,
     ry: 0.17,
     rot: -0.05,
-    link: {
-      href: 'https://github.com/gsd-build/get-shit-done',
-      label: 'Open the GSD framework',
-    },
+    links: [
+      {
+        href: 'https://github.com/gsd-build/get-shit-done',
+        label: 'Open the GSD framework',
+        shortLabel: 'github.com/gsd-build',
+      },
+    ],
   },
 ]
 

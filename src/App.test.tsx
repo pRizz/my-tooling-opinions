@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@solidjs/testing-library'
+import { vi } from 'vitest'
 import App from './App'
 import { getMotionTime } from './lib/chart'
 
@@ -24,23 +25,65 @@ describe('App', () => {
   it('updates the detail panel when a chart node receives keyboard focus', async () => {
     render(() => <App />)
 
-    const gsdNode = screen.getByTestId('chart-node-gsd')
+    const codexDesktopNode = screen.getByTestId('chart-node-codex-desktop')
 
-    await fireEvent.focus(gsdNode)
+    await fireEvent.focus(codexDesktopNode)
 
-    expect(screen.getByRole('heading', { name: 'Get-Shit-Done (GSD)' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Codex Desktop' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Open the Codex app' })).toHaveAttribute(
+      'href',
+      'https://developers.openai.com/codex/app',
+    )
+  })
+
+  it('renders multiple outbound links for the mixed cursor and codex node', async () => {
+    render(() => <App />)
+
+    await fireEvent.focus(screen.getByTestId('chart-node-cursor-codex'))
+
+    const links = screen.getAllByRole('link')
+
+    expect(links).toHaveLength(2)
+    expect(links[0]).toHaveAccessibleName('Open Cursor')
+    expect(links[0]).toHaveAttribute('href', 'https://cursor.com/')
+    expect(links[1]).toHaveAccessibleName('Open the Codex app')
+    expect(links[1]).toHaveAttribute('href', 'https://developers.openai.com/codex/app')
+  })
+
+  it('keeps the GSD external call to action intact', async () => {
+    render(() => <App />)
+
+    await fireEvent.focus(screen.getByTestId('chart-node-gsd'))
+
     expect(screen.getByRole('link', { name: 'Open the GSD framework' })).toHaveAttribute(
       'href',
       'https://github.com/gsd-build/get-shit-done',
     )
   })
 
-  it('only exposes the external call to action for linked nodes', async () => {
+  it('opens the primary official URL when a linked blob is clicked', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+
     render(() => <App />)
 
-    await fireEvent.focus(screen.getByTestId('chart-node-codex-desktop'))
+    await fireEvent.click(screen.getByTestId('chart-node-cursor-codex'))
 
-    expect(screen.queryByRole('link', { name: 'Open the GSD framework' })).not.toBeInTheDocument()
+    expect(openSpy).toHaveBeenCalledWith('https://cursor.com/', '_blank', 'noopener,noreferrer')
+
+    openSpy.mockRestore()
+  })
+
+  it('keeps legend clicks selection-only', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+
+    render(() => <App />)
+
+    await fireEvent.click(screen.getByRole('button', { name: 'Get-Shit-Done (GSD)' }))
+
+    expect(openSpy).not.toHaveBeenCalled()
+    expect(screen.getByRole('heading', { name: 'Get-Shit-Done (GSD)' })).toBeInTheDocument()
+
+    openSpy.mockRestore()
   })
 })
 

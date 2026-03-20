@@ -1,3 +1,4 @@
+import { For } from 'solid-js'
 import type { LandscapeNode } from '../data/landscape'
 
 interface DetailPanelProps {
@@ -6,6 +7,8 @@ interface DetailPanelProps {
 
 export function DetailPanel(props: DetailPanelProps) {
   const isForeground = () => props.node.layer === 'foreground'
+  const links = () => props.node.links ?? []
+  const linkCount = () => links().length
 
   return (
     <aside class="detail-panel" aria-live="polite" aria-labelledby="detail-title">
@@ -31,22 +34,25 @@ export function DetailPanel(props: DetailPanelProps) {
         <div>
           <div class="detail-label">Interaction model</div>
           <p class="detail-value">
-            {props.node.link
-              ? 'Select it for context, then follow the external link.'
-              : 'Inspect it in-place and compare it against the other regions.'}
+            {linkCount() === 0
+              ? 'Inspect it in-place and compare it against the other regions.'
+              : linkCount() === 1
+                ? 'Select it for context, then follow the external link.'
+                : 'Select it for context, then follow the official link that best matches your task.'}
           </p>
         </div>
       </div>
 
-      {props.node.link ? (
-        <a
-          class="detail-link"
-          href={props.node.link.href}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {props.node.link.label}
-        </a>
+      {linkCount() > 0 ? (
+        <div class="detail-links" aria-label="External links">
+          <For each={links()}>
+            {(link) => (
+              <a class="detail-link" href={link.href} target="_blank" rel="noreferrer">
+                {link.label}
+              </a>
+            )}
+          </For>
+        </div>
       ) : null}
 
       <p class="detail-hint">
