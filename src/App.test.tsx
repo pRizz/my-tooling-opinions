@@ -3,19 +3,22 @@ import App from './App'
 import { getMotionTime } from './lib/chart'
 
 describe('App', () => {
-  it('switches palettes through the Kobalte toggle group', async () => {
+  it('defaults to dark mode and toggles to light mode', async () => {
     render(() => <App />)
 
     const shell = screen.getByRole('main', { name: 'AI Tooling Landscape' })
-    const coolButton = screen.getByRole('button', { name: 'Cool Tech' })
+    const lightModeSwitch = screen.getByRole('switch', { name: 'Light mode' })
+
+    expect(shell).toHaveAttribute('data-palette', 'dark')
+    expect(shell).toHaveAttribute('data-color-mode', 'dark')
+    expect(lightModeSwitch).not.toBeChecked()
+
+    await fireEvent.click(lightModeSwitch)
 
     expect(shell).toHaveAttribute('data-palette', 'bold')
-
-    await fireEvent.click(coolButton)
-
-    expect(shell).toHaveAttribute('data-palette', 'cool')
-    expect(coolButton).toHaveAttribute('aria-pressed', 'true')
-    expect(shell.getAttribute('style')).toContain('--page-background: #0f1729')
+    expect(shell).toHaveAttribute('data-color-mode', 'light')
+    expect(lightModeSwitch).toBeChecked()
+    expect(shell.getAttribute('style')).toContain('--page-background: #fffef8')
   })
 
   it('updates the detail panel when a chart node receives keyboard focus', async () => {

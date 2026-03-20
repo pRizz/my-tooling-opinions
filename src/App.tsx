@@ -1,12 +1,11 @@
 import { createMemo, createSignal } from 'solid-js'
+import { ColorModeToggle } from './components/ColorModeToggle'
 import { DetailPanel } from './components/DetailPanel'
 import { LandscapeChart } from './components/LandscapeChart'
-import { PaletteSwitcher } from './components/PaletteSwitcher'
 import {
   backgroundNodes,
   foregroundNodes,
   nodeById,
-  paletteOrder,
   palettes,
   type ChartSelectionState,
   type PaletteId,
@@ -14,7 +13,7 @@ import {
 import './App.css'
 
 function App() {
-  const [palette, setPalette] = createSignal<PaletteId>('bold')
+  const [palette, setPalette] = createSignal<PaletteId>('dark')
   const [maybeHoveredNodeId, setMaybeHoveredNodeId] = createSignal<string | null>(null)
   const [maybeSelectedNodeId, setMaybeSelectedNodeId] = createSignal<string | null>(
     foregroundNodes[0]?.id ?? backgroundNodes[0]?.id ?? null,
@@ -60,6 +59,7 @@ function App() {
     <main
       class="app-shell"
       data-palette={palette()}
+      data-color-mode={palette() === 'dark' ? 'dark' : 'light'}
       style={themeStyles()}
       role="main"
       aria-label="AI Tooling Landscape"
@@ -81,10 +81,9 @@ function App() {
           </p>
         </div>
 
-        <PaletteSwitcher
-          value={palette()}
-          options={paletteOrder.map((id) => palettes[id])}
-          onChange={setPalette}
+        <ColorModeToggle
+          checked={palette() !== 'dark'}
+          onChange={(isLightMode) => setPalette(isLightMode ? 'bold' : 'dark')}
         />
 
         <div class="content-grid">
