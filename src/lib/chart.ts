@@ -67,14 +67,20 @@ function buildBlobPoints(
 ): Point[] {
   const points: Point[] = []
   const count = 80
+  const primaryAmplitude = 0.024
+  const secondaryAmplitude = 0.015
+  const tertiaryAmplitude = 0.009
+  const primarySpeed = 0.34
+  const secondarySpeed = 0.48
+  const tertiarySpeed = 0.2
 
   for (let index = 0; index < count; index += 1) {
     const angle = (index / count) * Math.PI * 2
     const wobble =
       1 +
-      0.06 * Math.sin(angle * 3 + time * 0.8) +
-      0.04 * Math.cos(angle * 5 - time * 1.2) +
-      0.03 * Math.sin(angle * 7 + time * 0.5)
+      primaryAmplitude * Math.sin(angle * 3 + time * primarySpeed) +
+      secondaryAmplitude * Math.cos(angle * 5 - time * secondarySpeed) +
+      tertiaryAmplitude * Math.sin(angle * 7 + time * tertiarySpeed)
     const x0 = radiusX * Math.cos(angle) * wobble
     const y0 = radiusY * Math.sin(angle) * wobble
     const x = x0 * Math.cos(rotation) - y0 * Math.sin(rotation)

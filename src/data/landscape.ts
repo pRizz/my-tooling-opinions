@@ -257,8 +257,8 @@ export const foregroundNodes: readonly LandscapeNode[] = [
     layer: 'foreground',
     cx: 0.45,
     cy: 0.3,
-    rx: 0.22,
-    ry: 0.14,
+    rx: 0.18,
+    ry: 0.12,
     rot: 0.1,
   },
   {
