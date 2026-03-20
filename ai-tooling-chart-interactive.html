@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Tooling Landscape — When to Use What</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;1,9..40,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 30px;
+    transition: background-color 0.5s ease;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 2.2rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+    transition: color 0.5s ease;
+  }
+
+  .header p {
+    font-size: 0.95rem;
+    font-weight: 300;
+    transition: color 0.5s ease;
+  }
+
+  .palette-switcher {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    align-items: center;
+  }
+
+  .palette-switcher span {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    transition: color 0.5s ease;
+  }
+
+  .palette-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .palette-btn:hover { transform: scale(1.15); }
+  .palette-btn.active { border-color: currentColor; transform: scale(1.1); }
+
+  .palette-btn[data-palette="warm"] { background: linear-gradient(135deg, #d28c50, #8caa5a); }
+  .palette-btn[data-palette="cool"] { background: linear-gradient(135deg, #508cff, #00d2b4); }
+  .palette-btn[data-palette="bold"] { background: linear-gradient(135deg, #ffa000, #dc2864, #00b478); }
+  .palette-btn[data-palette="dark"] { background: linear-gradient(135deg, #ffb432, #b478ff, #50dcA0); }
+
+  .chart-container {
+    position: relative;
+    width: 920px;
+    height: 700px;
+  }
+
+  canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-radius: 12px;
+    transition: box-shadow 0.5s ease;
+  }
+
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    max-width: 260px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 10;
+  }
+
+  .tooltip.visible { opacity: 1; }
+  .tooltip .tool-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+  .tooltip .tool-desc { font-weight: 300; opacity: 0.85; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 20px;
+    justify-content: center;
+    max-width: 920px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    transition: color 0.5s ease;
+  }
+
+  .legend-item .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    transition: background 0.5s ease;
+    flex-shrink: 0;
+  }
+
+  .legend-item .swatch.bg-swatch { border-radius: 3px; opacity: 0.7; }
+
+  .legend-item a {
+    text-decoration: none;
+    transition: color 0.5s ease;
+  }
+  .legend-item a:hover { text-decoration: underline; }
+
+  .footer {
+    margin-top: 18px;
+    font-size: 0.72rem;
+    font-weight: 300;
+    font-style: italic;
+    transition: color 0.5s ease;
+  }
+</style>
+</head>
+<body>
+  <div class="header">
+    <h1>AI Tooling Landscape</h1>
+    <p>Choosing the right tool for the job</p>
+  </div>
+
+  <div class="palette-switcher">
+    <span>Theme:</span>
+    <button class="palette-btn active" data-palette="bold" title="Bold & Colorful"></button>
+    <button class="palette-btn" data-palette="warm" title="Warm & Earthy"></button>
+    <button class="palette-btn" data-palette="cool" title="Cool Tech"></button>
+    <button class="palette-btn" data-palette="dark" title="Dark Mode"></button>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="chart" width="920" height="700"></canvas>
+    <div class="tooltip" id="tooltip"></div>
+  </div>
+
+  <div class="legend" id="legend"></div>
+  <div class="footer">Peter's opinionated guide · 2026</div>
+
+<script>
+const CW = 920, CH = 700;
+const canvas = document.getElementById('chart');
+const ctx = canvas.getContext('2d');
+const tooltipEl = document.getElementById('tooltip');
+const legendEl = document.getElementById('legend');
+
+// Generous margins: left for y-axis labels, bottom for x-axis, top/right for breathing room
+const MARGIN = { top: 60, right: 50, bottom: 70, left: 120 };
+const CHART = {
+  left: MARGIN.left,
+  top: MARGIN.top,
+  right: CW - MARGIN.right,
+  bottom: CH - MARGIN.bottom
+};
+const W = CHART.right - CHART.left;
+const H = CHART.bottom - CHART.top;
+
+const palettes = {
+  warm: { bg:'#faf6f1', axis:'#5c4a3a', text:'#3d2e22', sub:'#8a7565', grid:'#e8ddd0',
+    bgFills: ['rgba(180,160,130,0.12)','rgba(140,155,120,0.12)'],
+    bgStrokes: ['rgba(180,160,130,0.28)','rgba(140,155,120,0.28)'],
+    blobs:['rgba(210,140,80,0.38)','rgba(180,100,60,0.33)','rgba(200,80,80,0.30)','rgba(100,140,120,0.33)'],
+    strokes:['rgba(210,140,80,0.7)','rgba(180,100,60,0.65)','rgba(200,80,80,0.6)','rgba(100,140,120,0.65)'],
+    tooltipBg:'rgba(250,246,241,0.92)', tooltipText:'#3d2e22', shadow:'rgba(92,74,58,0.08)' },
+  cool: { bg:'#0f1729', axis:'#8b9fc7', text:'#e2eafc', sub:'#6b80ad', grid:'rgba(100,130,200,0.12)',
+    bgFills: ['rgba(60,80,140,0.15)','rgba(40,100,120,0.15)'],
+    bgStrokes: ['rgba(60,80,140,0.32)','rgba(40,100,120,0.32)'],
+    blobs:['rgba(80,140,255,0.33)','rgba(160,80,255,0.30)','rgba(255,100,150,0.28)','rgba(80,200,255,0.30)'],
+    strokes:['rgba(80,140,255,0.6)','rgba(160,80,255,0.55)','rgba(255,100,150,0.55)','rgba(80,200,255,0.55)'],
+    tooltipBg:'rgba(15,23,41,0.92)', tooltipText:'#e2eafc', shadow:'rgba(0,0,0,0.3)' },
+  bold: { bg:'#fffef8', axis:'#2d2d2d', text:'#1a1a1a', sub:'#666', grid:'rgba(0,0,0,0.06)',
+    bgFills: ['rgba(160,160,180,0.10)','rgba(120,170,150,0.10)'],
+    bgStrokes: ['rgba(160,160,180,0.24)','rgba(120,170,150,0.24)'],
+    blobs:['rgba(255,160,0,0.38)','rgba(220,40,100,0.33)','rgba(100,60,255,0.30)','rgba(0,150,255,0.33)'],
+    strokes:['rgba(255,140,0,0.75)','rgba(220,40,100,0.7)','rgba(100,60,255,0.65)','rgba(0,150,255,0.7)'],
+    tooltipBg:'rgba(255,254,248,0.94)', tooltipText:'#1a1a1a', shadow:'rgba(0,0,0,0.08)' },
+  dark: { bg:'#1a1a1a', axis:'#888', text:'#e8e8e8', sub:'#777', grid:'rgba(255,255,255,0.05)',
+    bgFills: ['rgba(80,80,100,0.15)','rgba(60,100,90,0.15)'],
+    bgStrokes: ['rgba(80,80,100,0.32)','rgba(60,100,90,0.32)'],
+    blobs:['rgba(255,180,50,0.33)','rgba(255,90,120,0.30)','rgba(180,120,255,0.30)','rgba(60,180,240,0.30)'],
+    strokes:['rgba(255,180,50,0.6)','rgba(255,90,120,0.55)','rgba(180,120,255,0.55)','rgba(60,180,240,0.55)'],
+    tooltipBg:'rgba(30,30,30,0.94)', tooltipText:'#e8e8e8', shadow:'rgba(0,0,0,0.4)' }
+};
+
+// Background blobs — Codex Desktop is the foundational layer
+const bgBlobs = [
+  { name: 'Codex Desktop',
+    desc: 'Your default for simple apps. Fast iteration, no plan needed — just start building.',
+    cx: 0.15, cy: 0.50, rx: 0.18, ry: 0.47, rot: 0.04 },
+  { name: 'Codex Desktop (Plan Mode)',
+    desc: 'Your default from moderate to complex. Thoughtful prompting for structured, durable output.',
+    cx: 0.62, cy: 0.50, rx: 0.40, ry: 0.47, rot: -0.02 }
+];
+
+// Foreground tool blobs
+const fgTools = [
+  { name: 'Cursor / Codex Desktop',
+    desc: 'Quick builds, prototypes, simple apps. Just vibe and ship.',
+    cx: 0.15, cy: 0.22, rx: 0.15, ry: 0.17, rot: -0.1 },
+  { name: 'Lovable (Plan Mode)',
+    desc: 'Simple to complex apps with low-to-medium durability. Great for exploring ideas with structure.',
+    cx: 0.45, cy: 0.30, rx: 0.22, ry: 0.14, rot: 0.10 },
+  { name: 'Cursor Cloud Agents',
+    desc: 'Complex, long-running tasks. Let the agent grind while you focus elsewhere.',
+    cx: 0.82, cy: 0.38, rx: 0.15, ry: 0.35, rot: 0.06 },
+  { name: 'Get-Shit-Done (GSD)',
+    desc: 'Complex + engineered. The full framework for serious, maintainable AI-assisted builds.',
+    cx: 0.82, cy: 0.80, rx: 0.16, ry: 0.17, rot: -0.05,
+    link: 'https://github.com/gsd-build/get-shit-done' }
+];
+
+let currentPalette = 'bold';
+let hoveredTool = null;
+let animT = 0;
+
+function blobPath(cx, cy, rx, ry, rot, t) {
+  const pts = [];
+  const N = 80;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const wobble = 1 + 0.06 * Math.sin(a*3 + t*0.8) + 0.04 * Math.cos(a*5 - t*1.2) + 0.03 * Math.sin(a*7 + t*0.5);
+    const x0 = rx * Math.cos(a) * wobble;
+    const y0 = ry * Math.sin(a) * wobble;
+    const x = x0*Math.cos(rot) - y0*Math.sin(rot);
+    const y = x0*Math.sin(rot) + y0*Math.cos(rot);
+    pts.push([cx + x, cy + y]);
+  }
+  return pts;
+}
+
+function drawPoly(points, fill, stroke, lineW, dash) {
+  ctx.beginPath();
+  ctx.moveTo(points[0][0], points[0][1]);
+  for (let i = 1; i < points.length; i++) ctx.lineTo(points[i][0], points[i][1]);
+  ctx.closePath();
+  ctx.fillStyle = fill;
+  ctx.fill();
+  ctx.strokeStyle = stroke;
+  ctx.lineWidth = lineW;
+  ctx.setLineDash(dash || []);
+  ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function toCanvas(nx, ny) {
+  return [CHART.left + nx * W, CHART.bottom - ny * H];
+}
+
+function draw() {
+  const p = palettes[currentPalette];
+  document.body.style.backgroundColor = p.bg;
+  document.querySelector('.header h1').style.color = p.text;
+  document.querySelector('.header p').style.color = p.sub;
+  document.querySelector('.palette-switcher span').style.color = p.sub;
+  document.querySelector('.footer').style.color = p.sub;
+  canvas.style.boxShadow = `0 2px 40px ${p.shadow}`;
+
+  ctx.clearRect(0, 0, CW, CH);
+  ctx.fillStyle = p.bg;
+  ctx.beginPath(); ctx.roundRect(0, 0, CW, CH, 12); ctx.fill();
+
+  // Grid
+  ctx.strokeStyle = p.grid; ctx.lineWidth = 1; ctx.setLineDash([]);
+  for (let i = 1; i < 4; i++) {
+    const x = CHART.left + (W / 4) * i;
+    ctx.beginPath(); ctx.moveTo(x, CHART.top); ctx.lineTo(x, CHART.bottom); ctx.stroke();
+  }
+  for (let i = 1; i < 4; i++) {
+    const y = CHART.top + (H / 4) * i;
+    ctx.beginPath(); ctx.moveTo(CHART.left, y); ctx.lineTo(CHART.right, y); ctx.stroke();
+  }
+
+  // Background blobs
+  bgBlobs.forEach((b, i) => {
+    const [cx, cy] = toCanvas(b.cx, b.cy);
+    const rxPx = b.rx * W, ryPx = b.ry * H;
+    const pts = blobPath(cx, cy, rxPx, ryPx, b.rot, animT + i * 3 + 10);
+    const hl = hoveredTool && hoveredTool.type === 'bg' && hoveredTool.idx === i;
+    drawPoly(pts, p.bgFills[i], p.bgStrokes[i], hl ? 2.5 : 1.5, hl ? [] : [6, 4]);
+
+    ctx.fillStyle = p.sub;
+    ctx.font = '500 11px "DM Sans"';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const ly = cy - ryPx + 22;
+    ctx.fillText(b.name, cx, ly);
+    ctx.font = 'italic 300 9.5px "DM Sans"';
+    ctx.fillText('(default layer)', cx, ly + 14);
+  });
+
+  // Foreground blobs
+  fgTools.forEach((t, i) => {
+    const [cx, cy] = toCanvas(t.cx, t.cy);
+    const rxPx = t.rx * W, ryPx = t.ry * H;
+    const pts = blobPath(cx, cy, rxPx, ryPx, t.rot, animT + i * 2);
+    const hl = hoveredTool && hoveredTool.type === 'fg' && hoveredTool.idx === i;
+    drawPoly(pts, p.blobs[i], p.strokes[i], hl ? 3 : 1.5);
+
+    ctx.fillStyle = p.text;
+    ctx.font = hl ? '700 13.5px "DM Sans"' : '500 12.5px "DM Sans"';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const lines = t.name.length > 22 ? wrapText(t.name, 135) : [t.name];
+    lines.forEach((ln, li) => {
+      ctx.fillText(ln.trim(), cx, cy - (lines.length - 1) * 9 + li * 18);
+    });
+    if (t.link && hl) {
+      ctx.fillStyle = p.sub; ctx.font = '300 10px "DM Sans"';
+      ctx.fillText('github.com/gsd-build ↗', cx, cy + lines.length * 10 + 8);
+    }
+  });
+
+  // ===== AXES =====
+  ctx.strokeStyle = p.axis; ctx.lineWidth = 2; ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(CHART.left, CHART.top); ctx.lineTo(CHART.left, CHART.bottom); ctx.lineTo(CHART.right, CHART.bottom);
+  ctx.stroke();
+
+  // Arrowheads
+  ctx.fillStyle = p.axis;
+  ctx.beginPath(); ctx.moveTo(CHART.right+8, CHART.bottom); ctx.lineTo(CHART.right-4, CHART.bottom-5); ctx.lineTo(CHART.right-4, CHART.bottom+5); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(CHART.left, CHART.top-8); ctx.lineTo(CHART.left-5, CHART.top+4); ctx.lineTo(CHART.left+5, CHART.top+4); ctx.fill();
+
+  // ===== X-AXIS LABELS =====
+  ctx.fillStyle = p.axis; ctx.font = '500 13px "DM Sans"'; ctx.textAlign = 'center';
+  ctx.fillText('Simple', CHART.left + 50, CHART.bottom + 28);
+  ctx.fillText('Complex', CHART.right - 50, CHART.bottom + 28);
+
+  // X-axis title
+  ctx.font = 'italic 300 12px "DM Sans"'; ctx.fillStyle = p.sub;
+  ctx.fillText('App Complexity →', (CHART.left + CHART.right) / 2, CHART.bottom + 50);
+
+  // ===== Y-AXIS LABELS =====
+  // "Vibe Coded" near the bottom of y-axis
+  ctx.save();
+  ctx.translate(CHART.left - 30, CHART.bottom - 50);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = p.axis;
+  ctx.font = '500 13px "DM Sans"';
+  ctx.textAlign = 'center';
+  ctx.fillText('Vibe Coded', 0, 0);
+  ctx.restore();
+
+  // "Vibe Engineered" near the top of y-axis
+  ctx.save();
+  ctx.translate(CHART.left - 30, CHART.top + 60);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = p.axis;
+  ctx.font = '500 13px "DM Sans"';
+  ctx.textAlign = 'center';
+  ctx.fillText('Vibe Engineered', 0, 0);
+  ctx.restore();
+
+  // Y-axis title (further left)
+  ctx.save();
+  ctx.translate(CHART.left - 70, (CHART.top + CHART.bottom) / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillStyle = p.sub;
+  ctx.font = 'italic 300 12px "DM Sans"';
+  ctx.textAlign = 'center';
+  ctx.fillText('App Durability →', 0, 0);
+  ctx.restore();
+
+  // ===== LEGEND =====
+  const bgSolid = p.bgStrokes.map(s => s.replace(/[\d.]+\)$/, '0.5)'));
+  const fgSolid = p.strokes.map(s => s.replace(/[\d.]+\)$/, '1)'));
+  let lh = '';
+  bgBlobs.forEach((b, i) => {
+    lh += `<div class="legend-item"><div class="swatch bg-swatch" style="background:${bgSolid[i]}"></div><span style="color:${p.sub}">${b.name}</span></div>`;
+  });
+  lh += `<span style="color:${p.grid};margin:0 4px">|</span>`;
+  fgTools.forEach((t, i) => {
+    const inner = t.link
+      ? `<a href="${t.link}" target="_blank" rel="noopener" style="color:${p.text}">${t.name} ↗</a>`
+      : `<span style="color:${p.text}">${t.name}</span>`;
+    lh += `<div class="legend-item"><div class="swatch" style="background:${fgSolid[i]}"></div>${inner}</div>`;
+  });
+  legendEl.innerHTML = lh;
+
+  animT += 0.015;
+  requestAnimationFrame(draw);
+}
+
+function wrapText(text, maxW) {
+  const words = text.split(' ');
+  const lines = []; let cur = '';
+  words.forEach(w => {
+    const test = cur ? cur + ' ' + w : w;
+    if (test.length * 7.2 > maxW && cur) { lines.push(cur); cur = w; }
+    else cur = test;
+  });
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+function hitTest(mx, my) {
+  for (let i = fgTools.length - 1; i >= 0; i--) {
+    const t = fgTools[i];
+    const [cx, cy] = toCanvas(t.cx, t.cy);
+    const dx = (mx - cx) / (t.rx * W), dy = (my - cy) / (t.ry * H);
+    if (dx*dx + dy*dy < 1) return { type: 'fg', idx: i };
+  }
+  for (let i = bgBlobs.length - 1; i >= 0; i--) {
+    const b = bgBlobs[i];
+    const [cx, cy] = toCanvas(b.cx, b.cy);
+    const dx = (mx - cx) / (b.rx * W), dy = (my - cy) / (b.ry * H);
+    if (dx*dx + dy*dy < 1) return { type: 'bg', idx: i };
+  }
+  return null;
+}
+
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (CW / rect.width);
+  const my = (e.clientY - rect.top) * (CH / rect.height);
+  const hit = hitTest(mx, my);
+  hoveredTool = hit;
+  canvas.style.cursor = (hit && hit.type === 'fg' && fgTools[hit.idx].link) ? 'pointer' : 'default';
+
+  if (hit) {
+    const tool = hit.type === 'fg' ? fgTools[hit.idx] : bgBlobs[hit.idx];
+    const p = palettes[currentPalette];
+    tooltipEl.style.background = p.tooltipBg;
+    tooltipEl.style.color = p.tooltipText;
+    const tag = hit.type === 'bg' ? '<div style="font-size:0.7rem;opacity:0.5;margin-bottom:2px;text-transform:uppercase;letter-spacing:0.05em">Default Layer</div>' : '';
+    tooltipEl.innerHTML = `${tag}<div class="tool-name">${tool.name}</div><div class="tool-desc">${tool.desc}</div>`;
+    tooltipEl.classList.add('visible');
+    let tx = e.clientX - canvas.parentElement.getBoundingClientRect().left + 16;
+    let ty = e.clientY - canvas.parentElement.getBoundingClientRect().top - 10;
+    if (tx + 270 > CW) tx -= 290;
+    tooltipEl.style.left = tx + 'px'; tooltipEl.style.top = ty + 'px';
+  } else {
+    tooltipEl.classList.remove('visible');
+  }
+});
+
+canvas.addEventListener('click', () => {
+  if (hoveredTool && hoveredTool.type === 'fg' && fgTools[hoveredTool.idx].link)
+    window.open(fgTools[hoveredTool.idx].link, '_blank');
+});
+
+canvas.addEventListener('mouseleave', () => { hoveredTool = null; tooltipEl.classList.remove('visible'); });
+
+document.querySelectorAll('.palette-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPalette = btn.dataset.palette;
+  });
+});
+
+draw();
+</script>
+</body>
+</html>
