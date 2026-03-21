@@ -5,9 +5,16 @@
   padding: clamp(1.25rem, 2vw, 2rem);
   color: var(--text-primary);
   background:
-    radial-gradient(circle at top left, var(--accent-soft) 0, transparent 34%),
-    radial-gradient(circle at bottom right, color-mix(in srgb, var(--accent-color) 20%, transparent)
-      0, transparent 42%),
+    radial-gradient(
+      circle at top left,
+      color-mix(in srgb, var(--text-primary) 6%, transparent) 0,
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      color-mix(in srgb, var(--surface-border) 72%, transparent) 0,
+      transparent 42%
+    ),
     linear-gradient(180deg, var(--shell-background), var(--page-background));
   transition:
     background 0.45s ease,
@@ -28,7 +35,7 @@
   left: -5rem;
   width: 14rem;
   height: 14rem;
-  background: color-mix(in srgb, var(--accent-color) 26%, transparent);
+  background: color-mix(in srgb, var(--surface-border) 84%, transparent);
 }
 
 .background-orb-right {
