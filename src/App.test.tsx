@@ -75,7 +75,12 @@ describe('App', () => {
 
     const siteFooter = screen.getByRole('contentinfo')
     const sourceCodeLink = within(siteFooter).getByRole('link', { name: 'Source code' })
-    const openLinksLink = within(siteFooter).getByRole('link', { name: 'OpenLinks' })
+    const openLinksLink = within(siteFooter).getByRole('link', {
+      name: 'OpenLinks: Peter Ryszkiewicz',
+    })
+    const openLinksBadge = within(openLinksLink).getByRole('img', {
+      name: 'OpenLinks: Peter Ryszkiewicz',
+    })
 
     expect(sourceCodeLink).toHaveAttribute('href', 'https://github.com/pRizz/my-tooling-opinions')
     expect(sourceCodeLink).toHaveAttribute('target', '_blank')
@@ -84,6 +89,7 @@ describe('App', () => {
     expect(openLinksLink).toHaveAttribute('href', 'https://openlinks.us/')
     expect(openLinksLink).toHaveAttribute('target', '_blank')
     expect(openLinksLink).toHaveAttribute('rel', 'me noopener noreferrer')
+    expect(openLinksBadge).toHaveAttribute('src', 'https://openlinks.us/badges/openlinks.svg')
   })
 
   it('keeps the GSD external call to action intact', async () => {

@@ -16,6 +16,7 @@ import './App.css'
 
 const sourceCodeHref = 'https://github.com/pRizz/my-tooling-opinions'
 const openLinksHref = 'https://openlinks.us/'
+const openLinksBadgeSrc = 'https://openlinks.us/badges/openlinks.svg'
 
 function getCaptureMode(): 'graph-square' | null {
   const captureMode = new URLSearchParams(window.location.search).get('capture')
@@ -117,13 +118,12 @@ function App() {
             rel="me noopener noreferrer"
           >
             <img
-              class="footer-badge-icon"
-              src="/openlinks-favicon.svg"
-              alt=""
-              width="18"
-              height="18"
+              class="footer-badge-image"
+              src={openLinksBadgeSrc}
+              alt="OpenLinks: Peter Ryszkiewicz"
+              width="191"
+              height="20"
             />
-            <span>OpenLinks</span>
           </a>
         </div>
       </footer>
