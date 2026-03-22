@@ -24,22 +24,15 @@ describe('App', () => {
     expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   })
 
-  it('defaults to dark mode and toggles to light mode', async () => {
+  it('renders the interactive app in dark mode without an appearance switch', () => {
     render(() => <App />)
 
     const shell = screen.getByRole('main', { name: 'AI Tooling Landscape' })
-    const lightModeSwitch = screen.getByRole('switch', { name: 'Light mode' })
 
     expect(shell).toHaveAttribute('data-palette', 'dark')
     expect(shell).toHaveAttribute('data-color-mode', 'dark')
-    expect(lightModeSwitch).not.toBeChecked()
-
-    await fireEvent.click(lightModeSwitch)
-
-    expect(shell).toHaveAttribute('data-palette', 'bold')
-    expect(shell).toHaveAttribute('data-color-mode', 'light')
-    expect(lightModeSwitch).toBeChecked()
-    expect(shell.getAttribute('style')).toContain('--page-background: #fffef8')
+    expect(shell.getAttribute('style')).toContain('--page-background: #1a1a1a')
+    expect(screen.queryByRole('switch', { name: 'Light mode' })).not.toBeInTheDocument()
   })
 
   it('updates the detail panel when a chart node receives keyboard focus', async () => {

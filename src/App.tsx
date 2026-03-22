@@ -1,5 +1,4 @@
 import { createMemo, createSignal } from 'solid-js'
-import { ColorModeToggle } from './components/ColorModeToggle'
 import { DetailPanel } from './components/DetailPanel'
 import { GraphSquareCapture } from './components/GraphSquareCapture'
 import { LandscapeChart } from './components/LandscapeChart'
@@ -9,7 +8,6 @@ import {
   nodeById,
   palettes,
   type ChartSelectionState,
-  type PaletteId,
 } from './data/landscape'
 import { getThemeStyles } from './lib/theme'
 import './App.css'
@@ -30,22 +28,20 @@ function App() {
     return <GraphSquareCapture palette={palettes.dark} />
   }
 
-  const [palette, setPalette] = createSignal<PaletteId>('dark')
+  const theme = palettes.dark
+  const themeStyles = getThemeStyles(theme)
   const [maybeHoveredNodeId, setMaybeHoveredNodeId] = createSignal<string | null>(null)
   const [maybeSelectedNodeId, setMaybeSelectedNodeId] = createSignal<string | null>(
     foregroundNodes[0]?.id ?? backgroundNodes[0]?.id ?? null,
   )
 
-  const theme = createMemo(() => palettes[palette()])
   const activeNode = createMemo(() => {
     const activeId = maybeHoveredNodeId() ?? maybeSelectedNodeId()
     return activeId ? nodeById.get(activeId) ?? foregroundNodes[0] : foregroundNodes[0]
   })
 
-  const themeStyles = createMemo<Record<string, string>>(() => getThemeStyles(theme()))
-
   const selectionState = createMemo<ChartSelectionState>(() => ({
-    palette: palette(),
+    palette: 'dark',
     maybeHoveredNodeId: maybeHoveredNodeId(),
     maybeSelectedNodeId: maybeSelectedNodeId(),
   }))
@@ -53,9 +49,9 @@ function App() {
   return (
     <main
       class="app-shell"
-      data-palette={palette()}
-      data-color-mode={palette() === 'dark' ? 'dark' : 'light'}
-      style={themeStyles()}
+      data-palette="dark"
+      data-color-mode="dark"
+      style={themeStyles}
       role="main"
       aria-label="AI Tooling Landscape"
     >
@@ -76,11 +72,6 @@ function App() {
           </p>
         </div>
 
-        <ColorModeToggle
-          checked={palette() !== 'dark'}
-          onChange={(isLightMode) => setPalette(isLightMode ? 'bold' : 'dark')}
-        />
-
         <div class="content-grid">
           <section class="chart-column" aria-labelledby="chart-title">
             <div class="section-heading">
@@ -89,7 +80,7 @@ function App() {
             </div>
 
             <LandscapeChart
-              palette={theme()}
+              palette={theme}
               selectionState={selectionState()}
               onHoverChange={setMaybeHoveredNodeId}
               onSelectionChange={setMaybeSelectedNodeId}
