@@ -3,7 +3,26 @@ import { vi } from 'vitest'
 import App from './App'
 import { getMotionTime } from './lib/chart'
 
+afterEach(() => {
+  window.history.pushState({}, '', '/')
+})
+
 describe('App', () => {
+  it('renders the square graph capture without interactive chrome when requested', () => {
+    window.history.pushState({}, '', '/?capture=graph-square')
+
+    render(() => <App />)
+
+    expect(screen.getByTestId('graph-square-capture')).toHaveAttribute(
+      'data-capture-surface',
+      'graph-square',
+    )
+    expect(screen.queryByRole('switch', { name: 'Light mode' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Chart legend')).not.toBeInTheDocument()
+    expect(screen.queryByTestId('chart-node-codex-desktop')).not.toBeInTheDocument()
+  })
+
   it('defaults to dark mode and toggles to light mode', async () => {
     render(() => <App />)
 

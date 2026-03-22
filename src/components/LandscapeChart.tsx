@@ -25,6 +25,7 @@ interface LandscapeChartProps {
   selectionState: ChartSelectionState
   onHoverChange: (nodeId: string | null) => void
   onSelectionChange: (nodeId: string) => void
+  variant?: 'interactive' | 'capture'
 }
 
 function getPrimaryLink(node: LandscapeNode) {
@@ -57,8 +58,14 @@ function openNodeLink(node: LandscapeNode) {
 export function LandscapeChart(props: LandscapeChartProps) {
   const [timeInSeconds, setTimeInSeconds] = createSignal(0)
   const [motionEnabled, setMotionEnabled] = createSignal(true)
+  const isCaptureVariant = () => props.variant === 'capture'
 
   onMount(() => {
+    if (isCaptureVariant()) {
+      setMotionEnabled(false)
+      return
+    }
+
     const maybeMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 
     const updateMotionPreference = () => {
@@ -79,7 +86,9 @@ export function LandscapeChart(props: LandscapeChartProps) {
     })
   })
 
-  const animatedTime = createMemo(() => getMotionTime(timeInSeconds(), motionEnabled()))
+  const animatedTime = createMemo(() =>
+    isCaptureVariant() ? 0 : getMotionTime(timeInSeconds(), motionEnabled()),
+  )
 
   const activeNodeId = createMemo(
     () => props.selectionState.maybeHoveredNodeId ?? props.selectionState.maybeSelectedNodeId,
@@ -121,8 +130,8 @@ export function LandscapeChart(props: LandscapeChartProps) {
   )
 
   return (
-    <div class="chart-card">
-      <div class="chart-stage">
+    <div class="chart-card" data-variant={props.variant ?? 'interactive'}>
+      <div class="chart-stage" data-variant={props.variant ?? 'interactive'}>
         <svg
           class="chart-svg"
           viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
@@ -323,94 +332,98 @@ export function LandscapeChart(props: LandscapeChartProps) {
           </text>
         </svg>
 
-        <div class="chart-overlay">
-          <For each={allNodes}>
-            {(node) => {
-              const isActive = () => activeNodeId() === node.id
-              const linkCount = getLinkCount(node)
-              const hasLinks = linkCount > 0
-              const linkAriaSuffix =
-                linkCount === 0
-                  ? ''
-                  : linkCount === 1
-                    ? ' Opens an external link.'
-                    : ' Opens the primary external link.'
+        <Show when={!isCaptureVariant()}>
+          <div class="chart-overlay">
+            <For each={allNodes}>
+              {(node) => {
+                const isActive = () => activeNodeId() === node.id
+                const linkCount = getLinkCount(node)
+                const hasLinks = linkCount > 0
+                const linkAriaSuffix =
+                  linkCount === 0
+                    ? ''
+                    : linkCount === 1
+                      ? ' Opens an external link.'
+                      : ' Opens the primary external link.'
+
+                return (
+                  <Tooltip.Root openDelay={90} closeDelay={80}>
+                    <Tooltip.Trigger
+                      class="chart-hotspot"
+                      data-active={isActive()}
+                      data-has-link={hasLinks}
+                      style={getHotspotStyle(node)}
+                      aria-label={`${node.name}. ${node.description}${linkAriaSuffix}`}
+                      onPointerEnter={() => props.onHoverChange(node.id)}
+                      onPointerLeave={() => props.onHoverChange(null)}
+                      onFocus={() => props.onSelectionChange(node.id)}
+                      onClick={() => {
+                        props.onSelectionChange(node.id)
+                        openNodeLink(node)
+                      }}
+                      data-testid={`chart-node-${node.id}`}
+                    >
+                      <span class="sr-only">{node.name}</span>
+                    </Tooltip.Trigger>
+
+                    <Tooltip.Portal>
+                      <Tooltip.Content class="chart-tooltip">
+                        <div class="chart-tooltip-tag">
+                          {node.layer === 'foreground' ? 'Foreground tool' : 'Default layer'}
+                        </div>
+                        <div class="chart-tooltip-name">{node.name}</div>
+                        <div class="chart-tooltip-body">{node.description}</div>
+                        <Tooltip.Arrow class="chart-tooltip-arrow" />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
+                )
+              }}
+            </For>
+          </div>
+        </Show>
+      </div>
+
+      <Show when={!isCaptureVariant()}>
+        <p class="chart-caption">
+          The chart stays faithful to the original layout and descriptions, but now scales
+          responsively and exposes a persistent detail panel for touch and keyboard users.
+        </p>
+
+        <div class="legend" aria-label="Chart legend">
+          <For each={legendNodes()}>
+            {(item, index) => {
+              const isDivider = () => index() === backgroundNodes.length
+              const isActive = () => activeNodeId() === item.node.id
 
               return (
-                <Tooltip.Root openDelay={90} closeDelay={80}>
-                  <Tooltip.Trigger
-                    class="chart-hotspot"
-                    data-active={isActive()}
-                    data-has-link={hasLinks}
-                    style={getHotspotStyle(node)}
-                    aria-label={`${node.name}. ${node.description}${linkAriaSuffix}`}
-                    onPointerEnter={() => props.onHoverChange(node.id)}
-                    onPointerLeave={() => props.onHoverChange(null)}
-                    onFocus={() => props.onSelectionChange(node.id)}
-                    onClick={() => {
-                      props.onSelectionChange(node.id)
-                      openNodeLink(node)
-                    }}
-                    data-testid={`chart-node-${node.id}`}
-                  >
-                    <span class="sr-only">{node.name}</span>
-                  </Tooltip.Trigger>
+                <>
+                  <Show when={isDivider()}>
+                    <span class="legend-divider" aria-hidden="true">
+                      |
+                    </span>
+                  </Show>
 
-                  <Tooltip.Portal>
-                    <Tooltip.Content class="chart-tooltip">
-                      <div class="chart-tooltip-tag">
-                        {node.layer === 'foreground' ? 'Foreground tool' : 'Default layer'}
-                      </div>
-                      <div class="chart-tooltip-name">{node.name}</div>
-                      <div class="chart-tooltip-body">{node.description}</div>
-                      <Tooltip.Arrow class="chart-tooltip-arrow" />
-                    </Tooltip.Content>
-                  </Tooltip.Portal>
-                </Tooltip.Root>
+                  <button
+                    type="button"
+                    class="legend-chip"
+                    data-active={isActive()}
+                    data-clickable="true"
+                    onClick={() => props.onSelectionChange(item.node.id)}
+                  >
+                    <span
+                      class="legend-swatch"
+                      data-layer={item.node.layer}
+                      style={{ background: item.color }}
+                    />
+                    <span>{item.node.name}</span>
+                  </button>
+                </>
               )
             }}
           </For>
         </div>
-      </div>
-
-      <p class="chart-caption">
-        The chart stays faithful to the original layout and descriptions, but now scales
-        responsively and exposes a persistent detail panel for touch and keyboard users.
-      </p>
-
-      <div class="legend" aria-label="Chart legend">
-        <For each={legendNodes()}>
-          {(item, index) => {
-            const isDivider = () => index() === backgroundNodes.length
-            const isActive = () => activeNodeId() === item.node.id
-
-            return (
-              <>
-                <Show when={isDivider()}>
-                  <span class="legend-divider" aria-hidden="true">
-                    |
-                  </span>
-                </Show>
-
-                <button
-                  type="button"
-                  class="legend-chip"
-                  data-active={isActive()}
-                  data-clickable="true"
-                  onClick={() => props.onSelectionChange(item.node.id)}
-                >
-                  <span
-                    class="legend-swatch"
-                    data-layer={item.node.layer}
-                    style={{ background: item.color }}
-                  />
-                  <span>{item.node.name}</span>
-                </button>
-              </>
-            )
-          }}
-        </For>
-      </div>
+      </Show>
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import { createMemo, createSignal } from 'solid-js'
 import { ColorModeToggle } from './components/ColorModeToggle'
 import { DetailPanel } from './components/DetailPanel'
+import { GraphSquareCapture } from './components/GraphSquareCapture'
 import { LandscapeChart } from './components/LandscapeChart'
 import {
   backgroundNodes,
@@ -10,9 +11,21 @@ import {
   type ChartSelectionState,
   type PaletteId,
 } from './data/landscape'
+import { getThemeStyles } from './lib/theme'
 import './App.css'
 
+function getCaptureMode(): 'graph-square' | null {
+  const captureMode = new URLSearchParams(window.location.search).get('capture')
+  return captureMode === 'graph-square' ? captureMode : null
+}
+
 function App() {
+  const captureMode = getCaptureMode()
+
+  if (captureMode === 'graph-square') {
+    return <GraphSquareCapture palette={palettes.dark} />
+  }
+
   const [palette, setPalette] = createSignal<PaletteId>('dark')
   const [maybeHoveredNodeId, setMaybeHoveredNodeId] = createSignal<string | null>(null)
   const [maybeSelectedNodeId, setMaybeSelectedNodeId] = createSignal<string | null>(
@@ -25,29 +38,7 @@ function App() {
     return activeId ? nodeById.get(activeId) ?? foregroundNodes[0] : foregroundNodes[0]
   })
 
-  const themeStyles = createMemo<Record<string, string>>(() => {
-    const activeTheme = theme()
-    return {
-      '--page-background': activeTheme.background,
-      '--shell-background': activeTheme.shell,
-      '--surface-background': activeTheme.surface,
-      '--surface-border': activeTheme.surfaceBorder,
-      '--surface-shadow': activeTheme.shadow,
-      '--chart-fill': activeTheme.chartFill,
-      '--text-primary': activeTheme.text,
-      '--text-secondary': activeTheme.subtext,
-      '--axis-color': activeTheme.axis,
-      '--grid-color': activeTheme.grid,
-      '--tooltip-background': activeTheme.tooltipBackground,
-      '--tooltip-text': activeTheme.tooltipText,
-      '--accent-color': activeTheme.accent,
-      '--accent-soft': activeTheme.accentSoft,
-      '--legend-divider': activeTheme.legendDivider,
-      '--detail-border': activeTheme.detailBorder,
-      '--detail-muted': activeTheme.detailMuted,
-      '--focus-ring': activeTheme.focusRing,
-    }
-  })
+  const themeStyles = createMemo<Record<string, string>>(() => getThemeStyles(theme()))
 
   const selectionState = createMemo<ChartSelectionState>(() => ({
     palette: palette(),

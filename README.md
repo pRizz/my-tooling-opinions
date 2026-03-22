@@ -30,6 +30,14 @@ bun run build
 bun run test
 ```
 
+5. Regenerate the committed square graph screenshot:
+
+```bash
+bun run capture:graph
+```
+
+This writes the tracked asset to `public/graph-square.png`.
+
 ## GitHub Pages
 
 This repo is configured for a GitHub project page at `/my-tooling-opinions/`.
@@ -40,7 +48,8 @@ To enable deployment:
 2. Go to **Pages**.
 3. Set **Source** to **GitHub Actions**.
 
-After that, every push to `main` will trigger the Pages workflow in [deploy.yml](/Users/peterryszkiewicz/.codex/worktrees/b698/my-tooling-opinions/.github/workflows/deploy.yml).
+After that, every push to `main` will trigger the Pages workflow in [deploy.yml](./.github/workflows/deploy.yml).
+That workflow also regenerates `public/graph-square.png` and commits it back to `main` when the rendered image changes.
 
 ## Find Me
 
