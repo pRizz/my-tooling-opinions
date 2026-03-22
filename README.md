@@ -4,6 +4,10 @@
 
 A Bun-powered SolidJS + Kobalte static site version of the original `ai-tooling-chart-interactive.html`.
 
+## Preview
+
+![Square AI tooling graph screenshot](public/graph-square.png)
+
 ## Local development
 
 1. Install dependencies:
