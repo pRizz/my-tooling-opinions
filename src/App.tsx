@@ -14,6 +14,9 @@ import {
 import { getThemeStyles } from './lib/theme'
 import './App.css'
 
+const sourceCodeHref = 'https://github.com/pRizz/my-tooling-opinions'
+const openLinksHref = 'https://openlinks.us/'
+
 function getCaptureMode(): 'graph-square' | null {
   const captureMode = new URLSearchParams(window.location.search).get('capture')
   return captureMode === 'graph-square' ? captureMode : null
@@ -96,7 +99,34 @@ function App() {
         </div>
       </section>
 
-      <footer class="site-footer">Peter&apos;s opinionated guide · 2026</footer>
+      <footer class="site-footer">
+        <p class="footer-copy">Peter&apos;s opinionated guide · {new Date().getFullYear()}</p>
+        <div class="footer-actions" aria-label="Footer links">
+          <a
+            class="footer-link"
+            href={sourceCodeHref}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Source code
+          </a>
+          <a
+            class="footer-link footer-link-badge"
+            href={openLinksHref}
+            target="_blank"
+            rel="me noopener noreferrer"
+          >
+            <img
+              class="footer-badge-icon"
+              src="/openlinks-favicon.svg"
+              alt=""
+              width="18"
+              height="18"
+            />
+            <span>OpenLinks</span>
+          </a>
+        </div>
+      </footer>
     </main>
   )
 }

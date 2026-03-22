@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@solidjs/testing-library'
+import { fireEvent, render, screen, within } from '@solidjs/testing-library'
 import { vi } from 'vitest'
 import App from './App'
 import { getMotionTime } from './lib/chart'
@@ -21,6 +21,7 @@ describe('App', () => {
     expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('Chart legend')).not.toBeInTheDocument()
     expect(screen.queryByTestId('chart-node-codex-desktop')).not.toBeInTheDocument()
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
   })
 
   it('defaults to dark mode and toggles to light mode', async () => {
@@ -60,13 +61,29 @@ describe('App', () => {
 
     await fireEvent.focus(screen.getByTestId('chart-node-cursor-codex'))
 
-    const links = screen.getAllByRole('link')
+    const links = within(screen.getByLabelText('External links')).getAllByRole('link')
 
     expect(links).toHaveLength(2)
     expect(links[0]).toHaveAccessibleName('Open Cursor')
     expect(links[0]).toHaveAttribute('href', 'https://cursor.com/')
     expect(links[1]).toHaveAccessibleName('Open the Codex app')
     expect(links[1]).toHaveAttribute('href', 'https://developers.openai.com/codex/app')
+  })
+
+  it('renders footer links for the source repository and OpenLinks identity badge', () => {
+    render(() => <App />)
+
+    const siteFooter = screen.getByRole('contentinfo')
+    const sourceCodeLink = within(siteFooter).getByRole('link', { name: 'Source code' })
+    const openLinksLink = within(siteFooter).getByRole('link', { name: 'OpenLinks' })
+
+    expect(sourceCodeLink).toHaveAttribute('href', 'https://github.com/pRizz/my-tooling-opinions')
+    expect(sourceCodeLink).toHaveAttribute('target', '_blank')
+    expect(sourceCodeLink).toHaveAttribute('rel', 'noopener noreferrer')
+
+    expect(openLinksLink).toHaveAttribute('href', 'https://openlinks.us/')
+    expect(openLinksLink).toHaveAttribute('target', '_blank')
+    expect(openLinksLink).toHaveAttribute('rel', 'me noopener noreferrer')
   })
 
   it('keeps the GSD external call to action intact', async () => {
