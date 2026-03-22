@@ -15,6 +15,7 @@ const SERVER_URL = `http://${HOST}:${PORT}${siteBasePath}?capture=graph-square`
 const OUTPUT_PATH = path.resolve(process.cwd(), 'public/graph-square.png')
 const SERVER_BOOT_TIMEOUT_MS = 30_000
 const SHUTDOWN_TIMEOUT_MS = 5_000
+const CHART_CARD_SELECTOR = '.chart-card'
 
 async function waitForServer(url: string) {
   const deadline = Date.now() + SERVER_BOOT_TIMEOUT_MS
@@ -91,7 +92,10 @@ async function captureGraph() {
 
     const captureSurface = page.getByTestId('graph-square-capture')
     await captureSurface.waitFor({ state: 'visible', timeout: 15_000 })
-    await captureSurface.screenshot({
+    const chartCard = captureSurface.locator(CHART_CARD_SELECTOR)
+    await chartCard.waitFor({ state: 'visible', timeout: 15_000 })
+
+    await chartCard.screenshot({
       path: OUTPUT_PATH,
       type: 'png',
       animations: 'disabled',
