@@ -1,60 +1,37 @@
-# my-tooling-opinions
+# How I build
 
 [![OpenLinks](https://openlinks.us/badges/openlinks.svg)](https://openlinks.us/)
 
-A Bun-powered SolidJS + Kobalte static site version of the original `ai-tooling-chart-interactive.html`.
+I primarily build with **GPT 6.1 Sol High in Codex Desktop** or **Opus 5.5 High in the Claude Desktop app**. I use the two setups interchangeably.
 
-## Preview
+[Bright Builds Rules](https://github.com/bright-builds-llc/bright-builds-rules) captures my evolving standards for code quality, architecture, and maintainability.
 
-![Square AI tooling graph screenshot](public/graph-square.png)
+**[View the page](https://prizz.github.io/my-tooling-opinions/)**
+
+This repo contains the simple SolidJS page for my current setups. The previous tooling chart is preserved in Git history.
 
 ## Local development
 
-1. Install dependencies:
+Requires Bun and Node.js 24 or later.
 
 ```bash
-bun install
-```
-
-2. Start the dev server:
-
-```bash
+bun install --frozen-lockfile
 bun run dev
 ```
 
-3. Build the production site:
-
-```bash
-bun run build
-```
-
-4. Run the test suite:
+## Verification
 
 ```bash
 bun run test
+bun run build
 ```
-
-5. Regenerate the committed square graph screenshot:
-
-```bash
-bun run capture:graph
-```
-
-This writes the tracked asset to `public/graph-square.png`.
 
 ## GitHub Pages
 
-This repo is configured for a GitHub project page at `/my-tooling-opinions/`.
+The site is served at `/my-tooling-opinions/`. The [Pages workflow](.github/workflows/deploy.yml) tests, builds, and deploys on pushes to `main` or manual dispatch. It does not generate screenshots or commit changes back to the repo.
 
-To enable deployment:
+GitHub Pages must use **GitHub Actions** as its source in repository settings.
 
-1. Open the repo settings in GitHub.
-2. Go to **Pages**.
-3. Set **Source** to **GitHub Actions**.
-
-After that, every push to `main` will trigger the Pages workflow in [deploy.yml](./.github/workflows/deploy.yml).
-That workflow also regenerates `public/graph-square.png` and commits it back to `main` when the rendered image changes.
-
-## Find Me
+## Find me
 
 - [OpenLinks](https://openlinks.us/)

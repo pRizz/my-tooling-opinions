@@ -1,130 +1,37 @@
-import { fireEvent, render, screen, within } from '@solidjs/testing-library'
-import { vi } from 'vitest'
+import { render, screen, within } from '@solidjs/testing-library'
 import App from './App'
-import { getMotionTime } from './lib/chart'
 
 afterEach(() => {
   window.history.pushState({}, '', '/')
 })
 
-describe('App', () => {
-  it('renders the square graph capture without interactive chrome when requested', () => {
+describe('current tooling page', () => {
+  it('presents both setups as interchangeable with equal reasoning effort', () => {
+    render(() => <App />)
+
+    const setups = within(screen.getByRole('region', { name: 'My current setups' })).getAllByRole('article')
+    expect(setups).toHaveLength(2)
+    expect(within(setups[0]).getByRole('heading', { name: 'Codex Desktop' })).toBeInTheDocument()
+    expect(within(setups[0]).getByText('GPT 6.1 Sol')).toBeInTheDocument()
+    expect(within(setups[1]).getByRole('heading', { name: 'Claude Desktop app' })).toBeInTheDocument()
+    expect(within(setups[1]).getByText('Opus 5.5')).toBeInTheDocument()
+    for (const setup of setups) expect(within(setup).getByText('High')).toBeInTheDocument()
+    expect(screen.getByText(/I use them interchangeably/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Bright Builds Rules' })).toHaveAttribute(
+      'href', 'https://github.com/bright-builds-llc/bright-builds-rules',
+    )
+  })
+
+  it('serves the current page to visitors with an old capture query', () => {
     window.history.pushState({}, '', '/?capture=graph-square')
-
     render(() => <App />)
 
-    expect(screen.getByTestId('graph-square-capture')).toHaveAttribute(
-      'data-capture-surface',
-      'graph-square',
+    expect(screen.getByRole('main', { name: 'How I build' })).toBeInTheDocument()
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+    expect(screen.queryByTestId('graph-square-capture')).not.toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Source code' })).toHaveAttribute(
+      'href', 'https://github.com/pRizz/my-tooling-opinions',
     )
-    expect(screen.queryByRole('switch', { name: 'Light mode' })).not.toBeInTheDocument()
-    expect(screen.queryByRole('complementary')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Chart legend')).not.toBeInTheDocument()
-    expect(screen.queryByTestId('chart-node-codex-desktop')).not.toBeInTheDocument()
-    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument()
-  })
-
-  it('renders the interactive app in dark mode without an appearance switch', () => {
-    render(() => <App />)
-
-    const shell = screen.getByRole('main', { name: 'AI Tooling Landscape' })
-
-    expect(shell).toHaveAttribute('data-palette', 'dark')
-    expect(shell).toHaveAttribute('data-color-mode', 'dark')
-    expect(shell.getAttribute('style')).toContain('--page-background: #1a1a1a')
-    expect(screen.queryByRole('switch', { name: 'Light mode' })).not.toBeInTheDocument()
-  })
-
-  it('updates the detail panel when a chart node receives keyboard focus', async () => {
-    render(() => <App />)
-
-    const codexDesktopNode = screen.getByTestId('chart-node-codex-desktop')
-
-    await fireEvent.focus(codexDesktopNode)
-
-    expect(screen.getByRole('heading', { name: 'Codex Desktop' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Open the Codex app' })).toHaveAttribute(
-      'href',
-      'https://developers.openai.com/codex/app',
-    )
-  })
-
-  it('renders multiple outbound links for the mixed cursor and codex node', async () => {
-    render(() => <App />)
-
-    await fireEvent.focus(screen.getByTestId('chart-node-cursor-codex'))
-
-    const links = within(screen.getByLabelText('External links')).getAllByRole('link')
-
-    expect(links).toHaveLength(2)
-    expect(links[0]).toHaveAccessibleName('Open Cursor')
-    expect(links[0]).toHaveAttribute('href', 'https://cursor.com/')
-    expect(links[1]).toHaveAccessibleName('Open the Codex app')
-    expect(links[1]).toHaveAttribute('href', 'https://developers.openai.com/codex/app')
-  })
-
-  it('renders footer links for the source repository and OpenLinks identity badge', () => {
-    render(() => <App />)
-
-    const siteFooter = screen.getByRole('contentinfo')
-    const sourceCodeLink = within(siteFooter).getByRole('link', { name: 'Source code' })
-    const openLinksLink = within(siteFooter).getByRole('link', {
-      name: 'OpenLinks: Peter Ryszkiewicz',
-    })
-    const openLinksBadge = within(openLinksLink).getByRole('img', {
-      name: 'OpenLinks: Peter Ryszkiewicz',
-    })
-
-    expect(sourceCodeLink).toHaveAttribute('href', 'https://github.com/pRizz/my-tooling-opinions')
-    expect(sourceCodeLink).toHaveAttribute('target', '_blank')
-    expect(sourceCodeLink).toHaveAttribute('rel', 'noopener noreferrer')
-
-    expect(openLinksLink).toHaveAttribute('href', 'https://openlinks.us/')
-    expect(openLinksLink).toHaveAttribute('target', '_blank')
-    expect(openLinksLink).toHaveAttribute('rel', 'me noopener noreferrer')
-    expect(openLinksBadge).toHaveAttribute('src', 'https://openlinks.us/badges/openlinks.svg')
-  })
-
-  it('keeps the GSD external call to action intact', async () => {
-    render(() => <App />)
-
-    await fireEvent.focus(screen.getByTestId('chart-node-gsd'))
-
-    expect(screen.getByRole('link', { name: 'Open the GSD framework' })).toHaveAttribute(
-      'href',
-      'https://github.com/gsd-build/get-shit-done',
-    )
-  })
-
-  it('opens the primary official URL when a linked blob is clicked', async () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-
-    render(() => <App />)
-
-    await fireEvent.click(screen.getByTestId('chart-node-cursor-codex'))
-
-    expect(openSpy).toHaveBeenCalledWith('https://cursor.com/', '_blank', 'noopener,noreferrer')
-
-    openSpy.mockRestore()
-  })
-
-  it('keeps legend clicks selection-only', async () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-
-    render(() => <App />)
-
-    await fireEvent.click(screen.getByRole('button', { name: 'Get-Shit-Done (GSD)' }))
-
-    expect(openSpy).not.toHaveBeenCalled()
-    expect(screen.getByRole('heading', { name: 'Get-Shit-Done (GSD)' })).toBeInTheDocument()
-
-    openSpy.mockRestore()
-  })
-})
-
-describe('getMotionTime', () => {
-  it('disables animation when reduced motion is enabled', () => {
-    expect(getMotionTime(12.5, false)).toBe(0)
-    expect(getMotionTime(12.5, true)).toBe(12.5)
+    expect(screen.getByRole('link', { name: 'Find me on OpenLinks' })).toHaveAttribute('rel', 'me')
   })
 })

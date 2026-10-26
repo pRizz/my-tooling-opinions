@@ -1,124 +1,44 @@
-import { createMemo, createSignal } from 'solid-js'
-import { DetailPanel } from './components/DetailPanel'
-import { GraphSquareCapture } from './components/GraphSquareCapture'
-import { LandscapeChart } from './components/LandscapeChart'
-import {
-  backgroundNodes,
-  foregroundNodes,
-  nodeById,
-  palettes,
-  type ChartSelectionState,
-} from './data/landscape'
-import { getThemeStyles } from './lib/theme'
 import './App.css'
 
-const sourceCodeHref = 'https://github.com/pRizz/my-tooling-opinions'
-const openLinksHref = 'https://openlinks.us/'
-const openLinksBadgeSrc = 'https://openlinks.us/badges/openlinks.svg'
-
-function getCaptureMode(): 'graph-square' | null {
-  const captureMode = new URLSearchParams(window.location.search).get('capture')
-  return captureMode === 'graph-square' ? captureMode : null
-}
-
 function App() {
-  const captureMode = getCaptureMode()
-
-  if (captureMode === 'graph-square') {
-    return <GraphSquareCapture palette={palettes.dark} />
-  }
-
-  const theme = palettes.dark
-  const themeStyles = getThemeStyles(theme)
-  const [maybeHoveredNodeId, setMaybeHoveredNodeId] = createSignal<string | null>(null)
-  const [maybeSelectedNodeId, setMaybeSelectedNodeId] = createSignal<string | null>(
-    foregroundNodes[0]?.id ?? backgroundNodes[0]?.id ?? null,
-  )
-
-  const activeNode = createMemo(() => {
-    const activeId = maybeHoveredNodeId() ?? maybeSelectedNodeId()
-    return activeId ? nodeById.get(activeId) ?? foregroundNodes[0] : foregroundNodes[0]
-  })
-
-  const selectionState = createMemo<ChartSelectionState>(() => ({
-    palette: 'dark',
-    maybeHoveredNodeId: maybeHoveredNodeId(),
-    maybeSelectedNodeId: maybeSelectedNodeId(),
-  }))
-
   return (
-    <main
-      class="app-shell"
-      data-palette="dark"
-      data-color-mode="dark"
-      style={themeStyles}
-      role="main"
-      aria-label="AI Tooling Landscape"
-    >
-      <div class="background-orb background-orb-left" aria-hidden="true" />
-      <div class="background-orb background-orb-right" aria-hidden="true" />
+    <div class="app-shell">
+      <main class="page" aria-labelledby="page-title">
+        <header class="intro">
+          <p class="eyebrow">Peter Ryszkiewicz · My tooling opinions</p>
+          <h1 id="page-title">How I build</h1>
+          <p class="intro-copy">These are my two current setups. I use them interchangeably.</p>
+        </header>
 
-      <section class="hero-card">
-        <p class="eyebrow">Peter&apos;s opinionated static atlas</p>
-        <div class="hero-copy">
-          <div>
-            <h1>AI Tooling Landscape</h1>
-            <p class="hero-subtitle">Choosing the right tool for the job.</p>
-          </div>
-          <p class="hero-body">
-            A modernized SolidJS rebuild of the original interactive chart, keeping the same
-            structure while making the experience responsive, keyboard-friendly, and easier to
-            inspect on touch devices.
+        <section class="setups" aria-label="My current setups">
+          <article class="setup" aria-labelledby="codex-title">
+            <p class="setup-label">OpenAI</p>
+            <h2 id="codex-title">Codex Desktop</h2>
+            <p class="model">GPT 6.1 Sol</p>
+            <p class="effort">Reasoning effort <strong>High</strong></p>
+          </article>
+          <article class="setup" aria-labelledby="claude-title">
+            <p class="setup-label">Anthropic</p>
+            <h2 id="claude-title">Claude Desktop app</h2>
+            <p class="model">Opus 5.5</p>
+            <p class="effort">Reasoning effort <strong>High</strong></p>
+          </article>
+        </section>
+
+        <section class="standards" aria-labelledby="standards-title">
+          <h2 id="standards-title">The standards I build on</h2>
+          <p>
+            <a href="https://github.com/bright-builds-llc/bright-builds-rules">Bright Builds Rules</a>
+            {' '}captures my evolving standards for code quality, architecture, and maintainability.
           </p>
-        </div>
-
-        <div class="content-grid">
-          <section class="chart-column" aria-labelledby="chart-title">
-            <div class="section-heading">
-              <h2 id="chart-title">Interactive chart</h2>
-              <p>Hover, tap, or tab through each region to compare fit, durability, and complexity.</p>
-            </div>
-
-            <LandscapeChart
-              palette={theme}
-              selectionState={selectionState()}
-              onHoverChange={setMaybeHoveredNodeId}
-              onSelectionChange={setMaybeSelectedNodeId}
-            />
-          </section>
-
-          <DetailPanel node={activeNode()} />
-        </div>
-      </section>
+        </section>
+      </main>
 
       <footer class="site-footer">
-        <p class="footer-copy">Peter&apos;s opinionated guide · {new Date().getFullYear()}</p>
-        <div class="footer-actions" aria-label="Footer links">
-          <a
-            class="footer-link"
-            href={sourceCodeHref}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Source code
-          </a>
-          <a
-            class="footer-link footer-link-badge"
-            href={openLinksHref}
-            target="_blank"
-            rel="me noopener noreferrer"
-          >
-            <img
-              class="footer-badge-image"
-              src={openLinksBadgeSrc}
-              alt="OpenLinks: Peter Ryszkiewicz"
-              width="191"
-              height="20"
-            />
-          </a>
-        </div>
+        <a href="https://github.com/pRizz/my-tooling-opinions">Source code</a>
+        <a href="https://openlinks.us/" rel="me">Find me on OpenLinks <span aria-hidden="true">↗</span></a>
       </footer>
-    </main>
+    </div>
   )
 }
 

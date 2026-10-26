@@ -3,8 +3,8 @@ import { defineConfig } from 'vite'
 import solid from 'vite-plugin-solid'
 import { siteBasePath } from './site.config'
 
-export default defineConfig({
-  plugins: [solid()],
+export default defineConfig(({ mode }) => ({
+  plugins: [solid({ hot: mode !== 'test' })],
   base: siteBasePath,
   test: {
     environment: 'jsdom',
@@ -15,4 +15,4 @@ export default defineConfig({
       reporter: ['text', 'html'],
     },
   },
-})
+}))
